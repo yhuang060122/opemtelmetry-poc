@@ -31,10 +31,25 @@
       <button type="button" class="btn primary" (click)="callApi()" [disabled]="busy()">
         调用后端 /api/health
       </button>
+      <button type="button" class="btn" (click)="loadOrders()" [disabled]="busy()">
+        加载订单（EF Core）
+      </button>
       <button type="button" class="btn" (click)="runWorkload()" [disabled]="busy()">
         生成嵌套 span
       </button>
     </div>
+
+    @if (orders().length > 0) {
+      <ul class="orders">
+        @for (row of orders(); track row.id) {
+          <li>
+            <span class="mono muted">#{{ row.id }}</span>
+            <span>{{ row.customer }}</span>
+            <span class="mono amount">¥{{ row.amount }}</span>
+          </li>
+        }
+      </ul>
+    }
   </section>
 
   <section class="card log">

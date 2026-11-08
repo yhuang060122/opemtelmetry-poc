@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "angular-otel-demo": {
+    "dotnet10-angular-otel-demo": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -56,10 +56,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "angular-otel-demo:build:production"
+              "buildTarget": "dotnet10-angular-otel-demo:build:production"
             },
             "development": {
-              "buildTarget": "angular-otel-demo:build:development"
+              "buildTarget": "dotnet10-angular-otel-demo:build:development"
             }
           },
           "defaultConfiguration": "development"

@@ -1,5 +1,5 @@
 {
-  "name": "angular-otel-demo",
+  "name": "dotnet10-angular-otel-demo",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",

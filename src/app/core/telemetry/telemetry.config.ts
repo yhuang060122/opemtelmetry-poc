@@ -28,7 +28,7 @@ declare global {
 }
 
 const DEFAULTS: OtelBrowserConfig = {
-  serviceName: 'angular-otel-demo',
+  serviceName: 'otel-demo-web',
   serviceVersion: '1.0.0',
   environment: 'development',
   tracesUrl: 'http://localhost:4318/v1/traces',

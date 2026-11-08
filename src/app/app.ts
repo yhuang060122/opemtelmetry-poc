@@ -23,6 +23,7 @@ export class App {
   protected readonly traceId = signal('—');
   protected readonly busy = signal(false);
   protected readonly log = signal<string[]>([]);
+  protected readonly orders = signal<OrderRow[]>([]);
 
   /** 走真实 HTTP 请求：验证 traceparent 是否注入了后端调用 */
   protected async callApi(): Promise<void> {
@@ -45,6 +46,29 @@ export class App {
       // 后端没起也照样上报 browser span，这本身就是有用的信号
       this.push(`✗ ${error instanceof Error ? error.message : String(error)}`);
       this.push('（span 已上报，可在 Dashboard 看到失败状态）');
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  /** 触发一次 EF Core 查询：后端会多出 SELECT span，整条链路完整 */
+  protected async loadOrders(): Promise<void> {
+    if (this.busy()) {
+      return;
+    }
+    this.busy.set(true);
+    this.push(`GET ${this.apiBase}/api/orders`);
+
+    try {
+      await this.traceService.run('demo.orders-list', { 'demo.origin': 'angular' }, async (span) => {
+        this.traceId.set(span.spanContext().traceId);
+        const rows = await firstValueFrom(this.http.get<OrderRow[]>(`${this.apiBase}/api/orders`));
+        this.orders.set(rows);
+        span.setAttribute('orders.count', rows.length);
+        this.push(`✓ ${rows.length} 条订单 — 后端应有 EF Core 的 SELECT span`);
+      });
+    } catch (error) {
+      this.push(`✗ ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       this.busy.set(false);
     }
@@ -82,4 +106,11 @@ export class App {
     const stamp = new Date().toLocaleTimeString();
     this.log.update((lines) => [`${stamp}  ${line}`, ...lines].slice(0, 12));
   }
+}
+
+export interface OrderRow {
+  id: number;
+  customer: string;
+  amount: number;
+  createdAt: string;
 }

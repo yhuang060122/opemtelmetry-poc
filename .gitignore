@@ -42,3 +42,14 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# .NET
+bin/
+obj/
+.vs/
+*.user
+*.suo
+# 本地 SQLite 演示库
+*.db
+*.db-shm
+*.db-wal

@@ -1,0 +1,31 @@
+@host = http://localhost:5080
+
+### 健康检查（返回 traceId）
+GET {{host}}/api/health
+Accept: application/json
+
+### 订单列表（触发 EF Core SELECT span）
+GET {{host}}/api/orders
+Accept: application/json
+
+### 新建订单（触发 EF Core INSERT span）
+POST {{host}}/api/orders
+Content-Type: application/json
+
+{
+  "customer": "王五",
+  "amount": 42.5
+}
+
+### 参数校验（400）
+POST {{host}}/api/orders
+Content-Type: application/json
+
+{
+  "customer": "",
+  "amount": 0
+}
+
+### 人为慢请求（看 span 时长）
+GET {{host}}/api/slow?ms=800
+Accept: application/json

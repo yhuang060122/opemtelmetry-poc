@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Attributes, Span, SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
 
-const TRACER_NAME = 'angular-otel-demo';
+const TRACER_NAME = 'otel-demo-web';
 const TRACER_VERSION = '1.0.0';
 
 /**
