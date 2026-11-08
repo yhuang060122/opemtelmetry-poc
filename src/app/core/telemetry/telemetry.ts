@@ -12,7 +12,9 @@ import {
 } from '@opentelemetry/semantic-conventions';
 import {
   BatchSpanProcessor,
+  ConsoleSpanExporter,
   ParentBasedSampler,
+  SimpleSpanProcessor,
   TraceIdRatioBasedSampler,
   WebTracerProvider,
 } from '@opentelemetry/sdk-trace-web';
@@ -56,15 +58,25 @@ export function initTelemetry(overrides: Partial<OtelBrowserConfig> = {}): void 
     sampler: new ParentBasedSampler({ root: new TraceIdRatioBasedSampler(config.sampleRatio) }),
 
     // spanProcessors 必须在构造函数里传（SDK 2.x 已移除 addSpanProcessor()）。
+    // 多个处理器是并行独立的：同一条 span 会交给每一个，互不影响、也不会重复上报。
+    // 两个开关都关掉时数组为空，span 会被直接丢弃——那是配置错误，不是合法用法。
     spanProcessors: [
-      // BatchSpanProcessor 异步攒批上报，不阻塞业务代码；
+      // OTLP 通道：BatchSpanProcessor 异步攒批上报，不阻塞业务代码；
       // 只有在页面即将关闭时才需要主动 flush（见下方 pagehide）。
-      new BatchSpanProcessor(
-        new OTLPTraceExporter({ url: config.tracesUrl, headers: config.headers }),
-        // 2 秒一批 / 32 条上限：面向开发环境"点了就能看到"的体感，
-        // 生产环境可以放宽到 5000ms / 512 条，减少上报请求数。
-        { scheduledDelayMillis: 2000, maxExportBatchSize: 32 },
-      ),
+      ...(config.otlpEnabled
+        ? [
+            new BatchSpanProcessor(
+              new OTLPTraceExporter({ url: config.tracesUrl, headers: config.headers }),
+              // 2 秒一批 / 32 条上限：面向开发环境"点了就能看到"的体感，
+              // 生产环境可以放宽到 5000ms / 512 条，减少上报请求数。
+              { scheduledDelayMillis: 2000, maxExportBatchSize: 32 },
+            ),
+          ]
+        : []),
+      // Console 通道：用 SimpleSpanProcessor 立即输出，故意不走攒批——
+      // 调试时"点一下就得看到"，等 2 秒会让人以为没生效。
+      // 代价是同步序列化，所以只用于本地排查，生产关掉（见 telemetry.config.ts）。
+      ...(config.consoleExporter ? [new SimpleSpanProcessor(new ConsoleSpanExporter())] : []),
     ],
   });
 
@@ -96,9 +108,13 @@ export function initTelemetry(overrides: Partial<OtelBrowserConfig> = {}): void 
     void provider?.forceFlush();
   });
 
-  // 开发环境打一行确认日志：最常见的故障是端点写错，看一眼就知道有没有生效
+  // 开发环境打一行确认日志：最常见的故障是端点写错/开关没生效，看一眼就知道
   if (config.environment === 'development') {
-    console.info('[otel] tracing enabled →', config.tracesUrl);
+    const targets = [
+      config.otlpEnabled ? `OTLP ${config.tracesUrl}` : null,
+      config.consoleExporter ? 'console' : null,
+    ].filter(Boolean);
+    console.info(`[otel] tracing enabled → ${targets.length ? targets.join(' + ') : '(无，span 会被丢弃)'}`);
   }
 }
 

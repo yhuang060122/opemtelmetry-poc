@@ -81,6 +81,48 @@ builder.AddAppObservability("otel-demo-api");
 - `propagateTraceHeaderCorsUrls` 决定往哪些后端地址注入 `traceparent`，默认匹配 `localhost:5000-5999 / 7000-7999`。
 - 想在运行时改服务名/端点（比如打到测试环境 collector），在 `index.html` 注入 `window.__OTEL_CONFIG__`，不用重新构建。
 
+## 没有 Dashboard 时：只发 console
+
+两个 exporter 互相独立，可以只开 console，不需要 Docker 和 Collector。
+
+后端（环境变量的优先级高于 appsettings）：
+
+```bash
+cd backend/OtelDemo.Api
+Observability__OtlpEnabled=false dotnet run
+```
+
+每个请求结束后 stdout 会打印一段 span，形如：
+
+```text
+Activity.TraceId:            4d4942a4f9d8ce1e3b70b7af6c67a733
+Activity.DisplayName:        GET /api/orders
+Activity.Kind:               Server
+Activity.Tags:
+    http.request.method: GET
+    url.path: /api/orders
+```
+
+前端的开关写在 `index.html` 里（必须在应用脚本之前）：
+
+```html
+<script>
+  window.__OTEL_CONFIG__ = { otlpEnabled: false, consoleExporter: true };
+</script>
+```
+
+| 配置键 | 默认值 | 作用 |
+| --- | --- | --- |
+| `Observability:ConsoleExporter`（后端） | 开发环境 `true` | 后端的 span / metric / log 打到 stdout |
+| `Observability:OtlpEnabled`（后端） | `true` | 发往 OTLP 后端；没有 Dashboard 时设 `false`，否则会不断重试刷连接失败 |
+| `consoleExporter`（前端） | 开发环境 `true` | 浏览器控制台输出完整 span JSON |
+| `otlpEnabled`（前端） | `true` | 发往 `tracesUrl`；没有 Dashboard 时设 `false` |
+
+两个预期内的"噪音"，不是 bug：
+
+- **metrics 是周期导出**（约 60 秒一次），开了 console 后每隔一段会刷一大段。
+- **日志会打两遍**：一遍来自默认 console logging provider，一遍来自 OTel 的 console exporter（带 TraceId/SpanId）。生产环境请把 `ConsoleExporter` 关掉。
+
 ## 版本
 
 后端：
