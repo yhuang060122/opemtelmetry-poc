@@ -1,0 +1,15 @@
+services:
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:13
+    container_name: aspire-dashboard
+    ports:
+      - "18888:18888"   # Web UI
+      - "4317:18889"    # OTLP/gRPC —— .NET 后端连这个
+      - "4318:18890"    # OTLP/HTTP —— 浏览器只能走这个
+    environment:
+      ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
+      # 允许该来源的浏览器页面直接上报；多个用逗号分隔，* 表示全部
+      DASHBOARD__OTLP__CORS__ALLOWEDORIGINS: "http://localhost:4200"
+      DASHBOARD__TELEMETRYLIMITS__MAXTRACECOUNT: "50000"
+      DASHBOARD__TELEMETRYLIMITS__MAXLOGCOUNT: "20000"
+    restart: unless-stopped

@@ -1,0 +1,58 @@
+<main class="page">
+  <header class="hero">
+    <p class="eyebrow">Angular · OpenTelemetry · Aspire Dashboard</p>
+    <h1>浏览器端 Trace 示例</h1>
+    <p class="lede">
+      页面加载即注册 tracing。点下面的按钮产生 span，然后在 Dashboard 里按 traceId 搜索。
+    </p>
+  </header>
+
+  <section class="card">
+    <dl class="meta">
+      <div>
+        <dt>service.name</dt>
+        <dd>{{ serviceName }}</dd>
+      </div>
+      <div>
+        <dt>OTLP/HTTP</dt>
+        <dd>{{ tracesUrl }}</dd>
+      </div>
+      <div>
+        <dt>API</dt>
+        <dd>{{ apiBase }}</dd>
+      </div>
+      <div>
+        <dt>traceId</dt>
+        <dd class="mono accent">{{ traceId() }}</dd>
+      </div>
+    </dl>
+
+    <div class="actions">
+      <button type="button" class="btn primary" (click)="callApi()" [disabled]="busy()">
+        调用后端 /api/health
+      </button>
+      <button type="button" class="btn" (click)="runWorkload()" [disabled]="busy()">
+        生成嵌套 span
+      </button>
+    </div>
+  </section>
+
+  <section class="card log">
+    <h2>事件</h2>
+    @if (log().length === 0) {
+      <p class="empty">还没有操作记录。</p>
+    } @else {
+      <ul>
+        @for (line of log(); track $index) {
+          <li class="mono">{{ line }}</li>
+        }
+      </ul>
+    }
+  </section>
+
+  <footer class="hint">
+    看不到数据？先确认 Dashboard 容器在跑，且
+    <code>DASHBOARD__OTLP__CORS__ALLOWEDORIGINS</code> 包含当前页面地址（默认
+    <code>http://localhost:4200</code>）。
+  </footer>
+</main>

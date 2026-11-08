@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Angular + OpenTelemetry Demo</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+  <!--
+    可选：运行时覆盖遥测配置（改了不用重新构建）。
+    生产环境建议由后端在返回 index.html 时注入。
+  -->
+  <!--
+  <script>
+    window.__OTEL_CONFIG__ = {
+      serviceName: 'my-web',
+      environment: 'staging',
+      tracesUrl: 'https://otel-collector.example.com/v1/traces'
+    };
+  </script>
+  -->
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>
